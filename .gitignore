@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+BUILD_LOG.txt
+BUILD_INFO.txt
+BUILD_PACKAGE_SHA256.txt
+BUILD_STRINGS.txt
+MACHO_HEADER.txt
+LINKED_FRAMEWORKS.txt
+SHA256.txt
+UniversalUIInspector.dylib
+UniversalUIInspector-arm64-BUILD.zip
+dist/
