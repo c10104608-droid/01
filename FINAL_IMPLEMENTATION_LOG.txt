@@ -1,0 +1,13 @@
+UniversalUIInspector visited-screen implementation log
+
+Status: implementation source is prepared; macOS arm64 build and GitHub Actions run are pending. Do not treat this template as evidence of a successful compile.
+
+Supplied inputs inspected: START_HERE.txt, MANUS_PROMPT_FULL.txt (complete), INPUT_SHA256.json, inputs/INSPECTOR_SOURCE.zip, inputs/INSPECTOR_BASELINE.dylib, inputs/FLEX_SOURCE.zip, inputs/FLEX_BASELINE.dylib.
+Baseline finding: inspector baseline SHA-256 8bc910231827d8eee2764d804d52990d5e53aaad733a2433db6269c830c5584e, arm64 Mach-O, embedded version 2.2.0/revision fefc02e1540b; its source implements manual in-memory screen capture and keeps the auto full-capture coordinator disabled. FLEX baseline SHA-256 4eb12da93096a8a34f96015c035e3994722bd331c5c867d8f41ead88ae41dc74, arm64 Mach-O; FLEX is optional and not linked into this exporter.
+
+Implementation: disk-backed per-screen/state snapshots; stable/debounced automatic foreground observation; primary-screen/manual capture; JSON/TXT view and controller trees, windows, visible elements, screenshots or screenshot errors; recovery offer; validation and manifest; single-ZIP share workflow. Existing runtime collectors are preserved and remain behind the original warm-up/stability gate.
+
+Portable CI command: python3 -m unittest discover -s tests -v
+Device injection/navigation test: NOT_TESTED in this environment. No physical iOS device or test IPA was attached to the sandbox.
+
+Build commit, Actions run URL, Xcode/SDK, dylib SHA-256, and architecture will be populated from the actual successful GitHub Actions build before final delivery.

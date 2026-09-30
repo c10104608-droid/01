@@ -1,0 +1,74 @@
+name: Build UniversalUIInspector dylib
+
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - staged-collectors
+      - feature/visited-screen-capture
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@v4
+      - name: Run portable capture/export contract tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 -m unittest discover -s tests -v
+      - name: Build and validate iOS arm64 dylib
+        shell: bash
+        run: |
+          set -euxo pipefail
+          chmod +x build-ios-dylib.sh
+          ./build-ios-dylib.sh
+      - name: Package dylib, complete source, and final build record
+        shell: bash
+        run: |
+          set -euxo pipefail
+          rm -rf dist
+          mkdir -p dist/source
+          cp UniversalUIInspector.dylib BUILD_INFO.txt BUILD_LOG.txt SHA256.txt MACHO_HEADER.txt LINKED_FRAMEWORKS.txt dist/
+          cp -R UniversalUIInspector dist/source/
+          cp build-ios-dylib.sh FEATURE_STATUS.md EXPORT_INTEGRITY_REPAIR.md FLEX_INTEGRATION.md README.md dist/source/
+          cp -R .github dist/source/
+          cp -R tests dist/source/
+          cat > dist/FINAL_IMPLEMENTATION_LOG.txt <<EOF
+          UniversalUIInspector visited-screen capture build
+          source_commit: $GITHUB_SHA
+          workflow_run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          runner: macos-14
+          iOS arm64 compile: PASS if artifact packaging is reached (clang, lipo, marker checks passed)
+          portable_contract_tests: PASS (run in preceding workflow step)
+          device_injection_test: NOT_TESTED in this CI workflow
+          source_and_binary_revision: both originate from source commit $GITHUB_SHA
+          runtime_scope: screens actually observed by the user; unknown/unvisited screens are not inferred
+          FLEX: optional separate dylib; no private FLEX API dependency or FLEX source bundled
+          known_limitations: see FEATURE_STATUS.md and FLEX_INTEGRATION.md
+          EOF
+          ditto -c -k --sequesterRsrc --keepParent dist UniversalUIInspector-arm64-BUILD.zip
+          unzip -t UniversalUIInspector-arm64-BUILD.zip
+          shasum -a 256 UniversalUIInspector-arm64-BUILD.zip > BUILD_PACKAGE_SHA256.txt
+      - name: Upload arm64 dylib and reproducible build bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: UniversalUIInspector-arm64
+          path: |
+            UniversalUIInspector.dylib
+            UniversalUIInspector-arm64-BUILD.zip
+            BUILD_INFO.txt
+            BUILD_LOG.txt
+            SHA256.txt
+            BUILD_PACKAGE_SHA256.txt
+            MACHO_HEADER.txt
+            LINKED_FRAMEWORKS.txt
+            dist/FINAL_IMPLEMENTATION_LOG.txt
+          if-no-files-found: error
+          retention-days: 30
